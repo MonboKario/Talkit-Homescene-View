@@ -191,12 +191,27 @@ const CardSlider = (() => {
 
         // ── 手机：陀螺仪（有就用，覆盖鼠标值） ──
         function startGyro() {
-            let hasData = false;
+            let baseBeta = null;
+            let baseGamma = null;
+
             window.addEventListener('deviceorientation', (e) => {
                 if (e.beta == null && e.gamma == null) return;
-                hasData = true;
-                targetTiltX = clamp((e.beta || 0) / 4, -MAX_TILT, MAX_TILT);
-                targetTiltY = clamp((e.gamma || 0) / 3, -MAX_TILT, MAX_TILT);
+
+                const beta = e.beta || 0;
+                const gamma = e.gamma || 0;
+
+                // 首次收到数据时，记录当前姿态作为"零点"
+                if (baseBeta === null) {
+                    baseBeta = beta;
+                    baseGamma = gamma;
+                }
+
+                // 用相对差值驱动倾斜
+                const diffBeta = beta - baseBeta;
+                const diffGamma = gamma - baseGamma;
+
+                targetTiltX = clamp(diffBeta / 3, -MAX_TILT, MAX_TILT);
+                targetTiltY = clamp(diffGamma / 3, -MAX_TILT, MAX_TILT);
             });
         }
 
@@ -214,7 +229,8 @@ const CardSlider = (() => {
                             .then(state => {
                                 if (state === 'granted') {
                                     startGyro();
-                                    btn.style.display = 'none';
+                                    btn.textContent = '陀螺仪已开启';
+                                    setTimeout(() => btn.style.display = 'none', 1500);
                                 } else {
                                     btn.textContent = '授权被拒绝';
                                     setTimeout(() => btn.style.display = 'none', 2000);
