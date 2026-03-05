@@ -93,6 +93,26 @@
         <div class="card" data-index="19"><img src="assets/Card5.png"></div>
     </div>
     <!-- 灰尘粒子由 dust-particles.js 通过 Canvas 渲染到这里 -->
+
+    <!-- iOS 陀螺仪授权按钮（仅在需要时显示） -->
+    <button id="gyro-btn" style="
+        display: none;
+        position: absolute;
+        bottom: 5vh;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        padding: 12px 28px;
+        font-size: 15px;
+        color: #fff;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 25px;
+        cursor: pointer;
+        letter-spacing: 1px;
+    ">点击开启体感</button>
 </div>
 
 <!-- 模块加载 -->

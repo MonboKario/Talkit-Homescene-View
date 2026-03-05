@@ -201,24 +201,37 @@ const CardSlider = (() => {
         }
 
         try {
-            if (typeof DeviceOrientationEvent !== 'undefined' &&
-                typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // iOS 13+ 需要用户手势触发授权
-                const handler = () => {
-                    DeviceOrientationEvent.requestPermission()
-                        .then(state => { if (state === 'granted') startGyro(); })
-                        .catch(() => {});
-                    document.removeEventListener('touchstart', handler);
-                    document.removeEventListener('click', handler);
-                };
-                document.addEventListener('touchstart', handler, { once: true });
-                document.addEventListener('click', handler, { once: true });
+            const needsPermission = typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function';
+
+            if (needsPermission) {
+                // iOS 13+ — 显示授权按钮
+                const btn = document.getElementById('gyro-btn');
+                if (btn) {
+                    btn.style.display = 'block';
+                    btn.addEventListener('click', () => {
+                        DeviceOrientationEvent.requestPermission()
+                            .then(state => {
+                                if (state === 'granted') {
+                                    startGyro();
+                                    btn.style.display = 'none';
+                                } else {
+                                    btn.textContent = '授权被拒绝';
+                                    setTimeout(() => btn.style.display = 'none', 2000);
+                                }
+                            })
+                            .catch(() => {
+                                btn.textContent = '授权失败';
+                                setTimeout(() => btn.style.display = 'none', 2000);
+                            });
+                    });
+                }
             } else if (typeof DeviceOrientationEvent !== 'undefined' || 'ondeviceorientation' in window) {
-                // Android / 其他支持的浏览器，直接监听
+                // Android / 其他浏览器，直接监听
                 startGyro();
             }
         } catch(e) {
-            // 不支持就静默忽略，鼠标跟随仍然生效
+            // 不支持就静默忽略
         }
 
         animateTilt();
