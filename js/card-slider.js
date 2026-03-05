@@ -125,6 +125,17 @@ const CardSlider = (() => {
         isAnimating = true;
         card.style.transition = 'none';
 
+        // 高亮闪烁
+        const hl = card.querySelector('.highlight-overlay');
+        if (hl) {
+            hl.style.transition = 'none';
+            hl.style.background = 'rgba(255, 255, 255, 0.35)';
+            requestAnimationFrame(() => {
+                hl.style.transition = 'background 0.6s ease-out';
+                hl.style.background = 'rgba(255, 255, 255, 0)';
+            });
+        }
+
             const DURATION = 700;
             const FREQ = 2.2;          // 振荡频率（圈数）
             const DECAY = 3.5;         // 衰减速度

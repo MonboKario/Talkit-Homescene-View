@@ -55,6 +55,16 @@
             pointer-events: none;
         }
 
+        .card .highlight-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            z-index: 3;
+            border-radius: inherit;
+            transition: background 0.15s ease;
+        }
+
         .fog-overlay {
             position: absolute;
             inset: 0;
@@ -71,26 +81,26 @@
 <div class="slider-container">
     <!-- 卡片舞台 -->
     <div class="stage" id="stage">
-        <div class="card" data-index="0" ><img src="assets/Card1.png"></div>
-        <div class="card" data-index="1" ><img src="assets/Card2.png"></div>
-        <div class="card" data-index="2" ><img src="assets/Card3.png"></div>
-        <div class="card" data-index="3" ><img src="assets/Card4.png"></div>
-        <div class="card" data-index="4" ><img src="assets/Card5.png"></div>
-        <div class="card" data-index="5" ><img src="assets/Card1.png"></div>
-        <div class="card" data-index="6" ><img src="assets/Card2.png"></div>
-        <div class="card" data-index="7" ><img src="assets/Card3.png"></div>
-        <div class="card" data-index="8" ><img src="assets/Card4.png"></div>
-        <div class="card" data-index="9" ><img src="assets/Card5.png"></div>
-        <div class="card" data-index="10"><img src="assets/Card1.png"></div>
-        <div class="card" data-index="11"><img src="assets/Card2.png"></div>
-        <div class="card" data-index="12"><img src="assets/Card3.png"></div>
-        <div class="card" data-index="13"><img src="assets/Card4.png"></div>
-        <div class="card" data-index="14"><img src="assets/Card5.png"></div>
-        <div class="card" data-index="15"><img src="assets/Card1.png"></div>
-        <div class="card" data-index="16"><img src="assets/Card2.png"></div>
-        <div class="card" data-index="17"><img src="assets/Card3.png"></div>
-        <div class="card" data-index="18"><img src="assets/Card4.png"></div>
-        <div class="card" data-index="19"><img src="assets/Card5.png"></div>
+        <div class="card" data-index="0" ><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="1" ><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="2" ><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="3" ><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="4" ><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="5" ><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="6" ><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="7" ><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="8" ><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="9" ><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="10"><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="11"><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="12"><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="13"><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="14"><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="15"><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="16"><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="17"><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="18"><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
+        <div class="card" data-index="19"><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
     </div>
     <!-- 灰尘粒子由 dust-particles.js 通过 Canvas 渲染到这里 -->
 
