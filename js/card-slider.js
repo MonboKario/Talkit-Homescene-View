@@ -170,21 +170,57 @@ const CardSlider = (() => {
     let targetTiltX = 0, targetTiltY = 0;
     const MAX_TILT = 16;
 
-    function initTilt() {
-        document.addEventListener('mousemove', (e) => {
-            const rect = stage.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = (e.clientX - cx) / (rect.width / 2);
-            const dy = (e.clientY - cy) / (rect.height / 2);
-            targetTiltY = Math.max(-1, Math.min(1, dx)) * MAX_TILT;
-            targetTiltX = Math.max(-1, Math.min(1, -dy)) * MAX_TILT;
-        });
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-        document.addEventListener('mouseleave', () => {
-            targetTiltX = 0;
-            targetTiltY = 0;
-        });
+    function initTilt() {
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (isMobile) {
+            // ── 手机：陀螺仪 ──
+            let gyroReady = false;
+
+            function startGyro() {
+                window.addEventListener('deviceorientation', (e) => {
+                    if (e.beta == null || e.gamma == null) return;
+                    // beta: 前后倾 (-180~180), gamma: 左右倾 (-90~90)
+                    // 除以一个系数让小幅度倾斜就有明显效果
+                    targetTiltX = clamp(e.beta / 4, -MAX_TILT, MAX_TILT);
+                    targetTiltY = clamp(e.gamma / 3, -MAX_TILT, MAX_TILT);
+                });
+                gyroReady = true;
+            }
+
+            // iOS 13+ 需要用户授权
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // 需要用户交互触发，在首次触摸时请求
+                const requestOnce = () => {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(state => { if (state === 'granted') startGyro(); })
+                        .catch(() => {});
+                    document.removeEventListener('touchstart', requestOnce);
+                };
+                document.addEventListener('touchstart', requestOnce, { once: true });
+            } else {
+                // Android 或旧 iOS，直接监听
+                startGyro();
+            }
+        } else {
+            // ── 桌面：鼠标跟随 ──
+            document.addEventListener('mousemove', (e) => {
+                const rect = stage.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (e.clientX - cx) / (rect.width / 2);
+                const dy = (e.clientY - cy) / (rect.height / 2);
+                targetTiltY = clamp(dx, -1, 1) * MAX_TILT;
+                targetTiltX = clamp(-dy, -1, 1) * MAX_TILT;
+            });
+
+            document.addEventListener('mouseleave', () => {
+                targetTiltX = 0;
+                targetTiltY = 0;
+            });
+        }
 
         animateTilt();
     }
