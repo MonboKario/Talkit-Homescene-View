@@ -131,7 +131,7 @@ const CardSlider = (() => {
             hl.style.transition = 'none';
             hl.style.background = 'rgba(255, 255, 255, 0.35)';
             requestAnimationFrame(() => {
-                hl.style.transition = 'background 0.6s ease-out';
+                hl.style.transition = 'background 1.2s ease-out';
                 hl.style.background = 'rgba(255, 255, 255, 0)';
             });
         }
