@@ -191,8 +191,8 @@ const CardSlider = (() => {
             const cy = rect.top + rect.height / 2;
             const dx = (e.clientX - cx) / (rect.width / 2);
             const dy = (e.clientY - cy) / (rect.height / 2);
-            targetTiltY = clamp(dx, -1, 1) * MAX_TILT;
-            targetTiltX = clamp(-dy, -1, 1) * MAX_TILT;
+            targetTiltY = clamp(dx, -1, 1) * MAX_TILT * 0.7;
+            targetTiltX = clamp(-dy, -1, 1) * MAX_TILT * 0.7;
         });
 
         document.addEventListener('mouseleave', () => {
