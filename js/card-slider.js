@@ -234,22 +234,20 @@ const CardSlider = (() => {
                 // iOS 13+ — 显示授权按钮
                 const btn = document.getElementById('gyro-btn');
                 if (btn) {
-                    btn.style.display = 'block';
                     btn.addEventListener('click', () => {
                         DeviceOrientationEvent.requestPermission()
                             .then(state => {
                                 if (state === 'granted') {
                                     startGyro();
                                     btn.textContent = '陀螺仪已开启';
-                                    setTimeout(() => btn.style.display = 'none', 1500);
+                                    // btn stays visible
                                 } else {
                                     btn.textContent = '授权被拒绝';
-                                    setTimeout(() => btn.style.display = 'none', 2000);
+                                    // btn stays visible
                                 }
                             })
                             .catch(() => {
                                 btn.textContent = '授权失败';
-                                setTimeout(() => btn.style.display = 'none', 2000);
                             });
                     });
                 }
