@@ -210,7 +210,7 @@ const CardSlider = (() => {
                 const diffBeta = beta - baseBeta;
                 const diffGamma = gamma - baseGamma;
 
-                targetTiltX = clamp(diffBeta / 3, -MAX_TILT, MAX_TILT);
+                targetTiltX = clamp(-diffBeta / 3, -MAX_TILT, MAX_TILT);
                 targetTiltY = clamp(diffGamma / 3, -MAX_TILT, MAX_TILT);
             });
         }
