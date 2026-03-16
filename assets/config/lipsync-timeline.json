@@ -1,5 +1,5 @@
 {
-  "source": "SequelProQuickLook0.mp3",
+  "source": "assets/audio/SequelProQuickLook0.mp3",
   "duration": 9.378,
   "sampleRate": 44100,
   "totalKeyframes": 46,
@@ -19,19 +19,19 @@
     "U"
   ],
   "visemeDescription": {
-    "sil": "静音 - 闭嘴/静止",
-    "PP": "双唇音 - p, b, m（双唇紧闭）",
-    "FF": "唇齿音 - f, v（下唇抵上齿）",
-    "TH": "齿间音 - th（舌尖在齿间）",
-    "DD": "舌尖音 - d, t, n, l（舌尖抵上齿龈）",
-    "kk": "舌根音 - k, g（舌根抬起）",
-    "CH": "卷舌音 - ch, sh, j（嘴唇前突）",
-    "SS": "咝音 - s, z（上下齿靠拢）",
-    "A": "开口元音 - a, ah（嘴大张）",
-    "E": "前元音 - e, ee（嘴角横展）",
-    "I": "闭前元音 - i（微张）",
-    "O": "圆唇元音 - o, oh（嘴唇圆拢）",
-    "U": "闭后元音 - u, oo（小圆口）"
+    "sil": "Silence or closed mouth",
+    "PP": "Bilabial sounds like p, b, m",
+    "FF": "Lip-to-teeth sounds like f, v",
+    "TH": "Tongue-between-teeth sounds like th",
+    "DD": "Tongue-tip sounds like d, t, n, l",
+    "kk": "Back-of-tongue sounds like k, g",
+    "CH": "Rounded mouth sounds like ch, sh, j",
+    "SS": "Narrow mouth sounds like s, z",
+    "A": "Open vowel like a or ah",
+    "E": "Front vowel like e or ee",
+    "I": "Tight front vowel like i",
+    "O": "Rounded vowel like o or oh",
+    "U": "Small rounded vowel like u or oo"
   },
   "keyframes": [
     {

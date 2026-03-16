@@ -116,7 +116,7 @@ export const APP_CONFIG = Object.freeze({
         settleDelayMs: 500,
     }),
     lipsync: Object.freeze({
-        audioUrl: 'temp-assets/Audio/SequelProQuickLook0.mp3',
+        audioUrl: 'assets/audio/SequelProQuickLook0.mp3',
         timelineUrl: 'assets/config/lipsync-timeline.json',
         triggerKey: 'Space',
     }),

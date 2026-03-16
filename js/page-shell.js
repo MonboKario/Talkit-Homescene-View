@@ -159,19 +159,26 @@ async function boot() {
             cardLayer?.destroy?.();
         };
 
-        activeApp = { destroy };
-
-        window.HomesceneApp = {
+        const homesceneApp = {
             cardLayer,
             modelLayer,
             cameraSceneApi: modelLayer.cameraSceneApi,
             cameraSceneConfig: modelConfig.camera.sceneConfig,
-            cameraSceneNames: modelLayer.cameraSceneApi?.listScenes?.() ?? [],
-            cameraSceneName: modelConfig.camera.initialSceneName,
-            experienceState: currentExperienceState,
             transitionToState,
             destroy,
+            get cameraSceneNames() {
+                return modelLayer?.cameraSceneApi?.listScenes?.() ?? [];
+            },
+            get cameraSceneName() {
+                return modelLayer?.getCurrentSceneName?.() ?? defaultSceneName;
+            },
+            get experienceState() {
+                return currentExperienceState;
+            },
         };
+
+        activeApp = homesceneApp;
+        window.HomesceneApp = homesceneApp;
     } catch (error) {
         removeExperienceListeners();
         unlockWindowSize();
@@ -190,5 +197,4 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('beforeunload', () => {
     destroyActiveApp();
 });
-
 

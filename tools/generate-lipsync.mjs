@@ -174,7 +174,7 @@ async function main() {
   const args = process.argv.slice(2);
   const inputPath = args[0]
     ? resolve(args[0])
-    : resolve(__dirname, '../temp-assets/Audio/SequelProQuickLook0.mp3');
+    : resolve(__dirname, '../assets/audio/SequelProQuickLook0.mp3');
   const outputPath = args[1]
     ? resolve(args[1])
     : resolve(__dirname, '../assets/config/lipsync-timeline.json');

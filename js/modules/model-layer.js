@@ -47,16 +47,10 @@ function createCameraSceneApi(cameraSceneStore, cameraDebugPanel, transitionToSc
             return cameraSceneStore.setScene(sceneName, sceneValues);
         },
         applyScene(sceneName) {
-            const applied = cameraSceneStore.applySceneByName(
-                sceneName || cameraSceneStore.getDefaultSceneName()
+            return transitionToScene(
+                sceneName || cameraSceneStore.getDefaultSceneName(),
+                { durationMs: 0 }
             );
-
-            if (applied) {
-                cameraSceneStore.applyTuningToCamera();
-                cameraDebugPanel.refresh();
-            }
-
-            return applied;
         },
         transitionToScene(sceneName, options) {
             return transitionToScene(sceneName, options);
@@ -72,9 +66,7 @@ function createCameraSceneApi(cameraSceneStore, cameraDebugPanel, transitionToSc
         },
         async reloadFromJson() {
             const sceneNames = await cameraSceneStore.reloadFromSource();
-            cameraSceneStore.applySceneByName(cameraSceneStore.getDefaultSceneName());
-            cameraSceneStore.applyTuningToCamera();
-            cameraDebugPanel.refresh();
+            transitionToScene(cameraSceneStore.getDefaultSceneName(), { durationMs: 0 });
             return sceneNames;
         },
     };
