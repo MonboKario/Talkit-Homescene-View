@@ -1,63 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启动器</title>
-    <style>
-        body {
-            margin: 0;
-            background: #0a0a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-        }
-        .launch-btn {
-            padding: 20px 50px;
-            font-size: 20px;
-            color: #fff;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            letter-spacing: 2px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .launch-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
-        }
-        .hint {
-            color: #666;
-            margin-top: 16px;
-            font-size: 13px;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="styles/index.css">
 </head>
 <body>
-    <div>
-        <button class="launch-btn" onclick="launchApp()">打开主页</button>
-        <div class="hint">将以 10:21 固定窗口打开</div>
-    </div>
-    <script>
-        function launchApp() {
-            const ratio = 10 / 21;
-            const h = Math.round(screen.availHeight * 0.92);
-            const w = Math.round(h * ratio);
-            const left = Math.round((screen.availWidth - w) / 2);
-            const top = Math.round((screen.availHeight - h) / 2);
+    <main class="launch-shell">
+        <button class="launch-shell__button" id="launch-btn" type="button">打开主页面</button>
+        <p class="launch-shell__hint">将以 10:21 固定窗口比例打开</p>
+    </main>
 
-            window.open(
-                'cards-v2.html',
-                'CardViewer',
-                `width=${w},height=${h},left=${left},top=${top},resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,status=no`
-            );
-        }
-
-        // 页面加载后自动启动
-        window.addEventListener('load', launchApp);
-    </script>
+    <script type="module" src="js/index-launcher.js"></script>
 </body>
 </html>

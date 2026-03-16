@@ -1,170 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>卡片拖拽吸附</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: #1a1a2e;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        .slider-container {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-            background-image: url('assets/your-background-image.png');
-            background-size: cover;
-            background-position: center;
-            perspective: 1200px;
-        }
-
-        .stage {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            transform: translateY(-7vh) scale(0.86);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform-style: preserve-3d;
-        }
-
-        .card {
-            position: absolute;
-            border-radius: 4px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            overflow: hidden;
-            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        opacity 0.35s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .card img {
-            height: 38.7vh;
-            width: auto;
-            display: block;
-            pointer-events: none;
-        }
-
-        .card .highlight-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0);
-            pointer-events: none;
-            z-index: 3;
-            border-radius: inherit;
-            transition: background 0.15s ease;
-        }
-
-        .fog-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0);
-            pointer-events: none;
-            z-index: 2;
-            transition: background 0.35s ease;
-            border-radius: inherit;
-        }
-    </style>
+    <title>Card Slider</title>
+    <link rel="stylesheet" href="styles/cards-v2.css">
 </head>
 <body>
-
-<div class="slider-container">
-    <!-- 卡片舞台 -->
-    <div class="stage" id="stage">
-        <div class="card" data-index="0" ><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="1" ><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="2" ><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="3" ><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="4" ><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="5" ><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="6" ><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="7" ><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="8" ><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="9" ><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="10"><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="11"><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="12"><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="13"><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="14"><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="15"><img src="assets/Card1.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="16"><img src="assets/Card2.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="17"><img src="assets/Card3.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="18"><img src="assets/Card4.png"><div class="highlight-overlay"></div></div>
-        <div class="card" data-index="19"><img src="assets/Card5.png"><div class="highlight-overlay"></div></div>
+    <div class="slider-container">
+        <div class="stage" id="stage" aria-live="polite"></div>
+        <div class="model-layer" id="glb-viewer"></div>
+        <button class="gyro-button" id="gyro-btn" type="button">Enable Gyroscope</button>
     </div>
-    <!-- 灰尘粒子由 dust-particles.js 通过 Canvas 渲染到这里 -->
 
-    <!-- iOS 陀螺仪授权按钮（仅在需要时显示） -->
-    <button id="gyro-btn" style="
-        display: block;
-        position: absolute;
-        bottom: 20vh;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        padding: 10px 20px;
-        font-size: 13px;
-        color: #fff;
-        opacity: 0.3;
-        background: rgba(255,255,255,0.12);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 20px;
-        cursor: pointer;
-        letter-spacing: 1px;
-    ">开启陀螺仪</button>
-</div>
-
-<!-- 模块加载 -->
-<script src="js/card-slider.js"></script>
-<script src="js/dust-particles.js"></script>
-<script>
-    // 锁死窗口尺寸：拖拽时强制恢复
-    (function lockSize() {
-        let lockedW = window.outerWidth;
-        let lockedH = window.outerHeight;
-
-        // 等窗口稳定后记录初始尺寸
-        setTimeout(() => {
-            lockedW = window.outerWidth;
-            lockedH = window.outerHeight;
-        }, 500);
-
-        window.addEventListener('resize', () => {
-            if (window.outerWidth !== lockedW || window.outerHeight !== lockedH) {
-                window.resizeTo(lockedW, lockedH);
-            }
-        });
-    })();
-
-    window.addEventListener('load', () => {
-        // 初始化卡片滑动
-        CardSlider.init('#stage');
-
-        // 初始化灰尘粒子（可调参数）
-        DustParticles.init('.slider-container', {
-            count: 25,
-            minSize: 0.8,
-            maxSize: 15,
-            minSpeed: 0.08,
-            maxSpeed: 0.6,
-            minOpacity: 0.15,
-            maxOpacity: 0.45,
-            color: '255,255,255',
-        });
-    });
-</script>
-
+    <script type="module" src="js/page-shell.js"></script>
 </body>
 </html>

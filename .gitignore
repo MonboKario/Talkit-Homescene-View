@@ -1,0 +1,5 @@
+*.log
+server*.log
+temp-assets/
+tools/node_modules/
+PROJECT_ANALYSIS.md

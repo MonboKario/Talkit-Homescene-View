@@ -1,0 +1,38 @@
+﻿body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(circle at top, rgba(84, 112, 198, 0.35), transparent 38%),
+        linear-gradient(180deg, #0a0a1a 0%, #05050d 100%);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.launch-shell {
+    text-align: center;
+}
+
+.launch-shell__button {
+    padding: 20px 50px;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.launch-shell__button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+}
+
+.launch-shell__hint {
+    margin: 16px 0 0;
+    color: #666;
+    font-size: 13px;
+}

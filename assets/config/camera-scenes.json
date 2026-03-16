@@ -1,0 +1,20 @@
+﻿{
+  "HomeScene": {
+    "positionX": 0.0,
+    "positionY": 8.1,
+    "positionZ": 50.0,
+    "rotationX": -6.5,
+    "rotationY": 0.0,
+    "rotationZ": 0.0,
+    "FOV": 15.0
+  },
+  "Taking": {
+    "positionX": 0.0,
+    "positionY": -0.7,
+    "positionZ": 10.0,
+    "rotationX": -6.50,
+    "rotationY": 0.0,
+    "rotationZ": 0.0,
+    "FOV": 15.0
+  }
+}

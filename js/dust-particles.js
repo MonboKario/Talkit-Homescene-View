@@ -1,115 +1,162 @@
-/**
- * Dust Particles – 轻量 Canvas 粒子模块
- * 用法：DustParticles.init(containerSelector, options)
- */
-const DustParticles = (() => {
-    let canvas, ctx, particles = [], animId;
-    let W, H;
+﻿const DEFAULT_OPTIONS = Object.freeze({
+    count: 60,
+    minSize: 0.8,
+    maxSize: 2.5,
+    minSpeed: 0.08,
+    maxSpeed: 0.35,
+    minOpacity: 0.15,
+    maxOpacity: 0.5,
+    color: '255,255,255',
+});
 
-    const defaults = {
-        count: 60,
-        minSize: 0.8,
-        maxSize: 2.5,
-        minSpeed: 0.08,
-        maxSpeed: 0.35,
-        minOpacity: 0.15,
-        maxOpacity: 0.5,
-        color: '255,255,255',
+function addListener(cleanups, target, type, handler, options) {
+    target.addEventListener(type, handler, options);
+    cleanups.push(() => {
+        target.removeEventListener(type, handler, options);
+    });
+}
+
+export function createDustParticles(options) {
+    const cleanups = [];
+    const opts = {
+        ...DEFAULT_OPTIONS,
+        ...options,
     };
 
-    let opts = {};
+    let canvas = null;
+    let context = null;
+    let particles = [];
+    let animationFrameId = 0;
+    let width = 0;
+    let height = 0;
 
-    function rand(min, max) {
+    function randomBetween(min, max) {
         return Math.random() * (max - min) + min;
     }
 
     function createParticle() {
         return {
-            x: rand(0, W),
-            y: rand(0, H),
-            r: rand(opts.minSize, opts.maxSize),
-            vx: rand(-opts.maxSpeed, opts.maxSpeed),
-            vy: rand(-opts.maxSpeed, opts.maxSpeed),
-            opacity: rand(opts.minOpacity, opts.maxOpacity),
-            opacityDir: rand(0.0003, 0.0012) * (Math.random() > 0.5 ? 1 : -1),
+            x: randomBetween(0, width),
+            y: randomBetween(0, height),
+            radius: randomBetween(opts.minSize, opts.maxSize),
+            velocityX: randomBetween(-opts.maxSpeed, opts.maxSpeed),
+            velocityY: randomBetween(-opts.maxSpeed, opts.maxSpeed),
+            opacity: randomBetween(opts.minOpacity, opts.maxOpacity),
+            opacityDirection: randomBetween(0.0003, 0.0012) * (Math.random() > 0.5 ? 1 : -1),
         };
     }
 
-    function initParticles() {
-        particles = [];
-        for (let i = 0; i < opts.count; i++) {
-            particles.push(createParticle());
-        }
+    function initializeParticles() {
+        particles = Array.from({ length: opts.count }, () => createParticle());
     }
 
-    function update() {
-        for (const p of particles) {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.opacity += p.opacityDir;
-            if (p.opacity > opts.maxOpacity || p.opacity < opts.minOpacity) {
-                p.opacityDir = -p.opacityDir;
+    function resizeCanvas() {
+        if (!canvas || !context) return;
+
+        const rect = opts.container.getBoundingClientRect();
+        const devicePixelRatio = window.devicePixelRatio || 1;
+
+        width = rect.width || window.innerWidth;
+        height = rect.height || window.innerHeight;
+
+        canvas.width = Math.round(width * devicePixelRatio);
+        canvas.height = Math.round(height * devicePixelRatio);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+
+    function updateParticles() {
+        particles.forEach((particle) => {
+            particle.x += particle.velocityX;
+            particle.y += particle.velocityY;
+            particle.opacity += particle.opacityDirection;
+
+            if (particle.opacity > opts.maxOpacity || particle.opacity < opts.minOpacity) {
+                particle.opacityDirection = -particle.opacityDirection;
             }
-            if (p.x < -5) p.x = W + 5;
-            if (p.x > W + 5) p.x = -5;
-            if (p.y < -5) p.y = H + 5;
-            if (p.y > H + 5) p.y = -5;
-        }
+
+            if (particle.x < -5) particle.x = width + 5;
+            if (particle.x > width + 5) particle.x = -5;
+            if (particle.y < -5) particle.y = height + 5;
+            if (particle.y > height + 5) particle.y = -5;
+        });
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, W, H);
-        for (const p of particles) {
-            ctx.globalAlpha = p.opacity;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgb(${opts.color})`;
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
+    function drawParticles() {
+        context.clearRect(0, 0, width, height);
+
+        particles.forEach((particle) => {
+            context.globalAlpha = particle.opacity;
+            context.beginPath();
+            context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+            context.fillStyle = `rgb(${opts.color})`;
+            context.fill();
+        });
+
+        context.globalAlpha = 1;
     }
 
     function loop() {
-        update();
-        draw();
-        animId = requestAnimationFrame(loop);
+        updateParticles();
+        drawParticles();
+        animationFrameId = requestAnimationFrame(loop);
     }
 
-    function resize() {
-        const parent = canvas.parentElement;
-        const rect = parent.getBoundingClientRect();
-        W = canvas.width  = rect.width  || window.innerWidth;
-        H = canvas.height = rect.height || window.innerHeight;
-        canvas.style.width  = W + 'px';
-        canvas.style.height = H + 'px';
-    }
-
-    function init(containerSelector, userOpts) {
-        opts = Object.assign({}, defaults, userOpts);
-
-        const container = document.querySelector(containerSelector);
-        if (!container) return console.error('DustParticles: container not found');
-
-        const pos = getComputedStyle(container).position;
-        if (pos === 'static') container.style.position = 'relative';
+    function start() {
+        if (!opts.container) {
+            console.error('DustParticles: container not found.');
+            return;
+        }
 
         canvas = document.createElement('canvas');
-        canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:100;';
-        container.appendChild(canvas);
-        ctx = canvas.getContext('2d');
+        canvas.className = 'dust-layer';
+        canvas.style.opacity = '1';
+        opts.container.appendChild(canvas);
 
-        resize();
-        initParticles();
+        context = canvas.getContext('2d');
+        resizeCanvas();
+        initializeParticles();
         loop();
 
-        window.addEventListener('resize', resize);
+        addListener(cleanups, window, 'resize', resizeCanvas);
+    }
+
+    function transitionToVisibility(targetOpacity, durationMs = 0) {
+        if (!canvas) return false;
+
+        const duration = Math.max(0, Number(durationMs) || 0);
+        if (duration > 0) {
+            canvas.style.transition = `opacity ${duration}ms ease`;
+        } else {
+            canvas.style.transition = 'none';
+        }
+
+        canvas.style.opacity = String(targetOpacity);
+        return true;
     }
 
     function destroy() {
-        cancelAnimationFrame(animId);
-        if (canvas && canvas.parentElement) canvas.parentElement.removeChild(canvas);
+        cleanups.splice(0).forEach((cleanup) => cleanup());
+
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = 0;
+        }
+
         particles = [];
+
+        if (canvas?.parentElement) {
+            canvas.parentElement.removeChild(canvas);
+        }
+
+        canvas = null;
+        context = null;
     }
 
-    return { init, destroy };
-})();
+    return {
+        start,
+        destroy,
+        transitionToVisibility,
+    };
+}

@@ -1,0 +1,268 @@
+{
+  "source": "SequelProQuickLook0.mp3",
+  "duration": 9.378,
+  "sampleRate": 44100,
+  "totalKeyframes": 46,
+  "visemeSet": [
+    "sil",
+    "PP",
+    "FF",
+    "TH",
+    "DD",
+    "kk",
+    "CH",
+    "SS",
+    "A",
+    "E",
+    "I",
+    "O",
+    "U"
+  ],
+  "visemeDescription": {
+    "sil": "静音 - 闭嘴/静止",
+    "PP": "双唇音 - p, b, m（双唇紧闭）",
+    "FF": "唇齿音 - f, v（下唇抵上齿）",
+    "TH": "齿间音 - th（舌尖在齿间）",
+    "DD": "舌尖音 - d, t, n, l（舌尖抵上齿龈）",
+    "kk": "舌根音 - k, g（舌根抬起）",
+    "CH": "卷舌音 - ch, sh, j（嘴唇前突）",
+    "SS": "咝音 - s, z（上下齿靠拢）",
+    "A": "开口元音 - a, ah（嘴大张）",
+    "E": "前元音 - e, ee（嘴角横展）",
+    "I": "闭前元音 - i（微张）",
+    "O": "圆唇元音 - o, oh（嘴唇圆拢）",
+    "U": "闭后元音 - u, oo（小圆口）"
+  },
+  "keyframes": [
+    {
+      "time": 0,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 0.035,
+      "viseme": "U",
+      "weight": 0.086
+    },
+    {
+      "time": 0.174,
+      "viseme": "DD",
+      "weight": 0.272
+    },
+    {
+      "time": 0.604,
+      "viseme": "U",
+      "weight": 0.193
+    },
+    {
+      "time": 0.952,
+      "viseme": "A",
+      "weight": 0.446
+    },
+    {
+      "time": 1.045,
+      "viseme": "DD",
+      "weight": 0.046
+    },
+    {
+      "time": 1.265,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 1.591,
+      "viseme": "A",
+      "weight": 1
+    },
+    {
+      "time": 1.788,
+      "viseme": "U",
+      "weight": 0.291
+    },
+    {
+      "time": 1.997,
+      "viseme": "FF",
+      "weight": 0.133
+    },
+    {
+      "time": 2.229,
+      "viseme": "A",
+      "weight": 0.644
+    },
+    {
+      "time": 2.415,
+      "viseme": "FF",
+      "weight": 0.193
+    },
+    {
+      "time": 2.531,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 2.589,
+      "viseme": "I",
+      "weight": 0.382
+    },
+    {
+      "time": 2.786,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 2.902,
+      "viseme": "U",
+      "weight": 0.201
+    },
+    {
+      "time": 3.042,
+      "viseme": "A",
+      "weight": 0.814
+    },
+    {
+      "time": 3.228,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 3.286,
+      "viseme": "FF",
+      "weight": 0.041
+    },
+    {
+      "time": 3.448,
+      "viseme": "I",
+      "weight": 0.593
+    },
+    {
+      "time": 3.68,
+      "viseme": "A",
+      "weight": 1
+    },
+    {
+      "time": 4.284,
+      "viseme": "U",
+      "weight": 0.097
+    },
+    {
+      "time": 4.377,
+      "viseme": "A",
+      "weight": 0.787
+    },
+    {
+      "time": 4.656,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 5.166,
+      "viseme": "O",
+      "weight": 0.286
+    },
+    {
+      "time": 5.712,
+      "viseme": "U",
+      "weight": 0.245
+    },
+    {
+      "time": 5.782,
+      "viseme": "DD",
+      "weight": 0.051
+    },
+    {
+      "time": 5.875,
+      "viseme": "A",
+      "weight": 0.831
+    },
+    {
+      "time": 6.049,
+      "viseme": "FF",
+      "weight": 0.147
+    },
+    {
+      "time": 6.142,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 6.455,
+      "viseme": "U",
+      "weight": 0.312
+    },
+    {
+      "time": 6.548,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 6.653,
+      "viseme": "DD",
+      "weight": 0.371
+    },
+    {
+      "time": 6.769,
+      "viseme": "A",
+      "weight": 1
+    },
+    {
+      "time": 6.966,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 7.047,
+      "viseme": "DD",
+      "weight": 0.011
+    },
+    {
+      "time": 7.175,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 7.581,
+      "viseme": "U",
+      "weight": 0.331
+    },
+    {
+      "time": 7.674,
+      "viseme": "A",
+      "weight": 0.803
+    },
+    {
+      "time": 7.906,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 8.046,
+      "viseme": "A",
+      "weight": 0.818
+    },
+    {
+      "time": 8.173,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 8.487,
+      "viseme": "O",
+      "weight": 0.426
+    },
+    {
+      "time": 8.719,
+      "viseme": "sil",
+      "weight": 0
+    },
+    {
+      "time": 8.975,
+      "viseme": "A",
+      "weight": 0.873
+    },
+    {
+      "time": 9.125,
+      "viseme": "sil",
+      "weight": 0
+    }
+  ]
+}
