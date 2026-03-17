@@ -1,4 +1,4 @@
-﻿import * as THREE from '../three/three.module.js';
+import * as THREE from '../three/three.module.js';
 
 function collectNodeNames(root) {
     const names = new Set();
@@ -114,6 +114,41 @@ function attachPreserveWorld(parent, child) {
     return true;
 }
 
+function getLoopMode(loopMode) {
+    return loopMode === 'once' ? THREE.LoopOnce : THREE.LoopRepeat;
+}
+
+function getLoopRepetitions(loopMode) {
+    return loopMode === 'once' ? 1 : Infinity;
+}
+
+function loadAnimationClip({ loader, animationUrl, targetModel }) {
+    return new Promise((resolve, reject) => {
+        loader.load(
+            animationUrl,
+            (animationGltf) => {
+                const sourceClip = animationGltf.animations?.[0];
+                if (!sourceClip) {
+                    reject(new Error('Animation GLB loaded but contains no clips.'));
+                    return;
+                }
+
+                const compatibleClip = createCompatibleClip(sourceClip, targetModel);
+                if (!compatibleClip) {
+                    reject(new Error('No compatible animation tracks found for TakiGLB model.'));
+                    return;
+                }
+
+                resolve(compatibleClip);
+            },
+            undefined,
+            (error) => {
+                reject(error);
+            }
+        );
+    });
+}
+
 export function rebindDetachedMeshesToAnimationChain(targetModel) {
     if (hasSkinnedMesh(targetModel)) return;
 
@@ -140,44 +175,179 @@ export function rebindDetachedMeshesToAnimationChain(targetModel) {
     }
 }
 
+export function createModelAnimationController({ loader, targetModel, animationStates }) {
+    const mixer = new THREE.AnimationMixer(targetModel);
+    const actionCache = new Map();
+    const actionLoaders = new Map();
+
+    let activeAction = null;
+    let activeStateName = null;
+    let pendingNextStateName = null;
+    let playRequestId = 0;
+
+    function getStateConfig(stateName) {
+        return animationStates?.[stateName] || null;
+    }
+
+    async function getActionEntry(stateName) {
+        if (actionCache.has(stateName)) {
+            return actionCache.get(stateName);
+        }
+
+        if (actionLoaders.has(stateName)) {
+            return actionLoaders.get(stateName);
+        }
+
+        const stateConfig = getStateConfig(stateName);
+        if (!stateConfig?.url) {
+            throw new Error(`Animation state "${stateName}" is not configured.`);
+        }
+
+        const actionPromise = loadAnimationClip({
+            loader,
+            animationUrl: stateConfig.url,
+            targetModel,
+        }).then((clip) => {
+            const action = mixer.clipAction(clip);
+            const entry = {
+                action,
+                clip,
+                stateConfig,
+            };
+            actionCache.set(stateName, entry);
+            actionLoaders.delete(stateName);
+            return entry;
+        }).catch((error) => {
+            actionLoaders.delete(stateName);
+            throw error;
+        });
+
+        actionLoaders.set(stateName, actionPromise);
+        return actionPromise;
+    }
+
+    function handleActionFinished(event) {
+        if (!activeAction || event.action !== activeAction) {
+            return;
+        }
+
+        const nextStateName = pendingNextStateName;
+        pendingNextStateName = null;
+
+        if (!nextStateName) {
+            return;
+        }
+
+        play(nextStateName);
+    }
+
+    async function play(stateName, options = {}) {
+        const stateConfig = getStateConfig(stateName);
+        if (!stateConfig?.url) {
+            console.warn(`Animation state "${stateName}" is not configured.`);
+            return false;
+        }
+
+        const requestId = ++playRequestId;
+        const requestedNextStateName = options.nextState || null;
+
+        let entry;
+        try {
+            entry = await getActionEntry(stateName);
+        } catch (error) {
+            console.warn(`Failed to load animation state "${stateName}":`, error);
+            return false;
+        }
+
+        if (requestId !== playRequestId) {
+            return false;
+        }
+
+        const { action } = entry;
+        if (activeAction && activeAction !== action) {
+            activeAction.stop();
+        }
+
+        pendingNextStateName = requestedNextStateName;
+        action.reset();
+        action.enabled = true;
+        action.clampWhenFinished = stateConfig.loop === 'once';
+        action.setEffectiveWeight(1);
+        action.setEffectiveTimeScale(1);
+        action.setLoop(getLoopMode(stateConfig.loop), getLoopRepetitions(stateConfig.loop));
+        action.repetitions = getLoopRepetitions(stateConfig.loop);
+        action.play();
+
+        activeAction = action;
+        activeStateName = stateName;
+        return true;
+    }
+
+    function update(deltaSeconds) {
+        mixer.update(deltaSeconds);
+    }
+
+    function preload(stateNames = Object.keys(animationStates || {})) {
+        stateNames.forEach((stateName) => {
+            if (!getStateConfig(stateName)?.url) {
+                return;
+            }
+
+            getActionEntry(stateName).catch((error) => {
+                console.warn(`Failed to preload animation state "${stateName}":`, error);
+            });
+        });
+    }
+
+    function destroy() {
+        mixer.removeEventListener('finished', handleActionFinished);
+        mixer.stopAllAction();
+        mixer.uncacheRoot(targetModel);
+        actionCache.clear();
+        actionLoaders.clear();
+        activeAction = null;
+        activeStateName = null;
+        pendingNextStateName = null;
+    }
+
+    mixer.addEventListener('finished', handleActionFinished);
+
+    return {
+        play,
+        update,
+        preload,
+        destroy,
+        getActiveStateName() {
+            return activeStateName;
+        },
+    };
+}
+
 export function applyExternalAnimation({
     loader,
     animationUrl,
     targetModel,
     onMixerReady,
 }) {
-    loader.load(
-        animationUrl,
-        (animationGltf) => {
-            const sourceClip = animationGltf.animations?.[0];
-            if (!sourceClip) {
-                console.warn('Animation GLB loaded but contains no clips.');
-                return;
-            }
-
-            const compatibleClip = createCompatibleClip(sourceClip, targetModel);
-            if (!compatibleClip) {
-                console.warn('No compatible animation tracks found for TakiGLB model.');
-                return;
-            }
-
-            const mixer = new THREE.AnimationMixer(targetModel);
-            const action = mixer.clipAction(compatibleClip);
-            action.reset();
-            action.enabled = true;
-            action.clampWhenFinished = false;
-            action.setEffectiveWeight(1);
-            action.setEffectiveTimeScale(1);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.repetitions = Infinity;
-            action.play();
-
-            console.log('Looping external animation on TakiGLB:', compatibleClip.name || '(unnamed)');
-            onMixerReady?.(mixer);
+    const controller = createModelAnimationController({
+        loader,
+        targetModel,
+        animationStates: {
+            external: {
+                url: animationUrl,
+                loop: 'repeat',
+            },
         },
-        undefined,
-        (error) => {
-            console.warn('Failed to load animation GLB:', error);
-        }
-    );
+    });
+
+    controller.play('external').then((started) => {
+        if (!started) return;
+        onMixerReady?.({
+            update: (deltaSeconds) => controller.update(deltaSeconds),
+            stopAllAction() {
+                controller.destroy();
+            },
+            uncacheRoot() {},
+        });
+    });
 }

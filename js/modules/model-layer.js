@@ -1,8 +1,10 @@
 import * as THREE from '../three/three.module.js';
 import { GLTFLoader } from '../three/GLTFLoader.js';
 import { createCameraDebugPanel } from './camera-debug-panel.js';
+import { applyCelShadingToModel } from './cel-shader.js';
 import { createCameraSceneStore } from './camera-scene-store.js';
-import { applyExternalAnimation, rebindDetachedMeshesToAnimationChain } from './model-animation.js';
+import { createLightingDebugPanel } from './lighting-debug-panel.js';
+import { createModelAnimationController, rebindDetachedMeshesToAnimationChain } from './model-animation.js';
 import { createModelInteraction } from './model-interaction.js';
 import { applyMaterialTuning, disposeModelResources, fitObjectToCamera, orientModelTowardCamera } from './model-layout.js';
 import { createModelRuntime } from './model-runtime.js';
@@ -99,8 +101,33 @@ function shouldIgnoreModelEvent(event) {
     return Boolean(
         target.closest('.card') ||
         target.closest('.gyro-button') ||
+        target.closest('.talking-mic-button') ||
         target.closest('.camera-debug-panel')
     );
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+function resolveShadowColorArray(shadowColor) {
+    if (Array.isArray(shadowColor) && shadowColor.length >= 3) {
+        return shadowColor.slice(0, 3).map((value, index) => {
+            const next = Number(value);
+            if (!Number.isFinite(next)) {
+                return index === 0 ? 0.72 : index === 1 ? 0.76 : 0.84;
+            }
+
+            return clamp(next, 0, 1);
+        });
+    }
+
+    return [0.72, 0.76, 0.84];
+}
+
+function resolveNumber(value, fallback) {
+    const next = Number(value);
+    return Number.isFinite(next) ? next : fallback;
 }
 
 export function initModelLayer(config) {
@@ -127,12 +154,31 @@ export function initModelLayer(config) {
     const pointer = new THREE.Vector2();
 
     let model = null;
-    let mixer = null;
+    let animationController = null;
+    let pendingAnimationState = config.animations?.defaultState || 'idle';
     let animationFrameId = 0;
     let destroyed = false;
     let activeSceneName = config.camera.initialSceneName || config.camera.defaultSceneName || 'HomeScene';
     let cameraTween = null;
     let lipsyncUpdateFn = null;
+    const baseShadowColor = resolveShadowColorArray(config.celShading?.shadowColor);
+    const lightShaderTuning = {
+        mainLight: {
+            x: lights.keyLight.position.x,
+            y: lights.keyLight.position.y,
+            z: lights.keyLight.position.z,
+            intensity: resolveNumber(lights.keyLight.intensity, resolveNumber(config.lights?.keyIntensity, 2.5)),
+        },
+        ambientLight: {
+            intensity: resolveNumber(lights.ambientLight.intensity, resolveNumber(config.lights?.ambientIntensity, 1.5)),
+        },
+        celShader: {
+            threshold: resolveNumber(config.celShading?.threshold, 0.5),
+            softness: resolveNumber(config.celShading?.softness, 0.02),
+            shadowColor: resolveNumber(config.celShading?.shadowColorStrength, 1),
+            specularStrength: resolveNumber(config.celShading?.specularStrength, 0.08),
+        },
+    };
 
     const cameraSceneStore = createCameraSceneStore({
         camera,
@@ -153,6 +199,43 @@ export function initModelLayer(config) {
             cameraSceneStore.applyTuningToCamera();
         },
     });
+
+    function getCelShadingOptions() {
+        const shadowColorScale = clamp(Number(lightShaderTuning.celShader.shadowColor) || 0, 0, 2);
+        return {
+            ...config.celShading,
+            threshold: clamp(Number(lightShaderTuning.celShader.threshold) || 0, 0, 1),
+            softness: clamp(Number(lightShaderTuning.celShader.softness) || 0, 0, 1),
+            shadowColor: baseShadowColor.map((value) => clamp(value * shadowColorScale, 0, 1)),
+            specularStrength: clamp(Number(lightShaderTuning.celShader.specularStrength) || 0, 0, 1),
+        };
+    }
+
+    function applyLightShaderTuning() {
+        lights.keyLight.position.set(
+            lightShaderTuning.mainLight.x,
+            lightShaderTuning.mainLight.y,
+            lightShaderTuning.mainLight.z
+        );
+        lights.keyLight.intensity = clamp(resolveNumber(lightShaderTuning.mainLight.intensity, lights.keyLight.intensity), 0, 10);
+        lights.ambientLight.intensity = clamp(resolveNumber(lightShaderTuning.ambientLight.intensity, lights.ambientLight.intensity), 0, 10);
+        lights.keyLight.updateMatrixWorld();
+
+        if (model) {
+            applyCelShadingToModel(model, getCelShadingOptions());
+        }
+    }
+
+    const lightingDebugPanel = createLightingDebugPanel({
+        container,
+        tuningState: lightShaderTuning,
+        enabled: config.debug?.enabled !== false,
+        toggleKey: config.debug?.lightingToggleKey || 'Numpad1',
+        onTuningChange() {
+            applyLightShaderTuning();
+        },
+    });
+    applyLightShaderTuning();
 
     function getCurrentSceneName() {
         return activeSceneName;
@@ -222,13 +305,15 @@ export function initModelLayer(config) {
         shouldIgnoreEvent: shouldIgnoreModelEvent,
     });
 
-    function replaceMixer(nextMixer) {
-        if (mixer && model) {
-            mixer.stopAllAction();
-            mixer.uncacheRoot(model);
+    async function playCharacterAnimation(stateName, options) {
+        if (!stateName) return false;
+
+        pendingAnimationState = stateName;
+        if (!animationController || destroyed) {
+            return false;
         }
 
-        mixer = nextMixer;
+        return animationController.play(stateName, options);
     }
 
     function updateCameraTween(now) {
@@ -265,8 +350,8 @@ export function initModelLayer(config) {
 
         const frameNow = now || performance.now();
         const deltaSeconds = Math.min(clock.getDelta(), 0.05);
-        if (mixer) {
-            mixer.update(deltaSeconds);
+        if (animationController) {
+            animationController.update(deltaSeconds);
         }
 
         updateCameraTween(frameNow);
@@ -289,6 +374,7 @@ export function initModelLayer(config) {
             model.updateMatrixWorld(true);
 
             applyMaterialTuning(model, config.materialTuning);
+            applyCelShadingToModel(model, getCelShadingOptions());
             scene.add(model);
             rebindDetachedMeshesToAnimationChain(model);
 
@@ -303,24 +389,21 @@ export function initModelLayer(config) {
             cameraSceneStore.applySceneByName(config.camera.initialSceneName);
             cameraSceneStore.applyTuningToCamera();
             cameraDebugPanel.refresh();
+            lightingDebugPanel.refresh();
             activeSceneName = config.camera.initialSceneName || cameraSceneStore.getDefaultSceneName();
 
             lights.keyLight.target.position.copy(model.position);
+            applyLightShaderTuning();
 
-            applyExternalAnimation({
+            animationController = createModelAnimationController({
                 loader,
-                animationUrl: config.animationUrl,
                 targetModel: model,
-                onMixerReady(nextMixer) {
-                    if (destroyed) {
-                        nextMixer.stopAllAction();
-                        nextMixer.uncacheRoot(model);
-                        return;
-                    }
-
-                    replaceMixer(nextMixer);
-                },
+                animationStates: config.animations?.states,
             });
+            playCharacterAnimation(pendingAnimationState);
+            animationController.preload(
+                Object.keys(config.animations?.states || {}).filter((stateName) => stateName !== pendingAnimationState)
+            );
         },
         undefined,
         (error) => {
@@ -346,12 +429,13 @@ export function initModelLayer(config) {
 
             interaction.destroy();
             cameraDebugPanel.destroy();
+            lightingDebugPanel.destroy();
             removeDebugGlobals();
             lipsyncUpdateFn = null;
 
-            if (mixer && model) {
-                mixer.stopAllAction();
-                mixer.uncacheRoot(model);
+            if (animationController) {
+                animationController.destroy();
+                animationController = null;
             }
 
             if (model) {
@@ -367,6 +451,7 @@ export function initModelLayer(config) {
         getCurrentSceneName,
         transitionToScene,
         cameraSceneApi,
+        playCharacterAnimation,
         setLipsyncUpdate(fn) {
             lipsyncUpdateFn = fn || null;
         },

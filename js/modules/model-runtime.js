@@ -29,14 +29,23 @@ export function createModelRuntime(container, config) {
     scene.add(ambientLight);
 
     const keyLight = new THREE.DirectionalLight(config.lights.keyColor, config.lights.keyIntensity);
-    const keyPitch = THREE.MathUtils.degToRad(config.lights.keyPitchDeg);
-    const keyYaw = THREE.MathUtils.degToRad(config.lights.keyYawDeg);
-    const keyDistance = config.lights.keyDistance;
-    keyLight.position.set(
-        keyDistance * Math.cos(keyPitch) * Math.sin(keyYaw),
-        keyDistance * Math.sin(keyPitch),
-        keyDistance * Math.cos(keyPitch) * Math.cos(keyYaw)
-    );
+    const keyPosition = Array.isArray(config.lights.keyPosition) ? config.lights.keyPosition : null;
+    if (keyPosition && keyPosition.length >= 3) {
+        keyLight.position.set(
+            Number(keyPosition[0]) || 0,
+            Number(keyPosition[1]) || 0,
+            Number(keyPosition[2]) || 0
+        );
+    } else {
+        const keyPitch = THREE.MathUtils.degToRad(config.lights.keyPitchDeg);
+        const keyYaw = THREE.MathUtils.degToRad(config.lights.keyYawDeg);
+        const keyDistance = config.lights.keyDistance;
+        keyLight.position.set(
+            keyDistance * Math.cos(keyPitch) * Math.sin(keyYaw),
+            keyDistance * Math.sin(keyPitch),
+            keyDistance * Math.cos(keyPitch) * Math.cos(keyYaw)
+        );
+    }
     keyLight.target.position.set(0, 0, 0);
     scene.add(keyLight);
     scene.add(keyLight.target);

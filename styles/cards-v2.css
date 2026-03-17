@@ -4,6 +4,11 @@
     padding: 0;
 }
 
+:root {
+    --talking-mic-transition-ms: 900ms;
+    --talking-mic-opacity-ms: 650ms;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -85,6 +90,68 @@ body {
     height: 100%;
     pointer-events: none;
     touch-action: none;
+}
+
+.talking-mic-button {
+    position: absolute;
+    left: 50%;
+    bottom: 8.333vh;
+    z-index: 110;
+    width: clamp(144px, 32vw, 208px);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate3d(-50%, calc(100% + 20vh), 0) scale(0.92);
+    transition:
+        transform var(--talking-mic-transition-ms) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity var(--talking-mic-opacity-ms) ease,
+        visibility 0s linear var(--talking-mic-transition-ms);
+    will-change: transform, opacity;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.talking-mic-button.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate3d(-50%, 0, 0) scale(1);
+    transition:
+        transform var(--talking-mic-transition-ms) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity var(--talking-mic-opacity-ms) ease,
+        visibility 0s linear 0s;
+}
+
+.talking-mic-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.28));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.talking-mic-button.is-visible:hover img {
+    transform: translateY(-2px) scale(1.03);
+    filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.34));
+}
+
+.talking-mic-button.is-speaking img {
+    filter:
+        drop-shadow(0 16px 24px rgba(0, 0, 0, 0.26))
+        drop-shadow(0 0 18px rgba(255, 126, 87, 0.42));
+}
+
+.talking-mic-button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.92);
+    outline-offset: 8px;
 }
 
 .dust-layer {

@@ -44,7 +44,3 @@ function launchApp({ fallbackToSameTab = false } = {}) {
 launchButton?.addEventListener('click', () => {
     launchApp({ fallbackToSameTab: true });
 });
-
-window.addEventListener('load', () => {
-    launchApp({ fallbackToSameTab: true });
-}, { once: true });

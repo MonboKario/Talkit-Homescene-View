@@ -1,7 +1,14 @@
 import { scanMorphTargets } from './morph-target-scanner.js';
 import { createLipsyncEngine } from './lipsync-engine.js';
 
-export async function createLipsyncPlayback({ audioUrl, timelineUrl, getModel }) {
+export async function createLipsyncPlayback({
+    audioUrl,
+    timelineUrl,
+    getModel,
+    onStart,
+    onStop,
+    onEnded,
+}) {
     const audio = new Audio();
     audio.src = audioUrl;
     audio.preload = 'auto';
@@ -31,6 +38,7 @@ export async function createLipsyncPlayback({ audioUrl, timelineUrl, getModel })
     function handleEnded() {
         playing = false;
         engine?.reset();
+        onEnded?.();
     }
 
     audio.addEventListener('ended', handleEnded);
@@ -40,15 +48,20 @@ export async function createLipsyncPlayback({ audioUrl, timelineUrl, getModel })
 
         if (playing) {
             audio.pause();
+            audio.currentTime = 0;
             playing = false;
             engine?.reset();
-        } else {
-            audio.currentTime = 0;
-            audio.play().catch((err) => {
-                console.warn('[LipSync] Audio play failed:', err);
-            });
-            playing = true;
+            onStop?.();
+            return;
         }
+
+        audio.currentTime = 0;
+        audio.play().then(() => {
+            playing = true;
+            onStart?.();
+        }).catch((err) => {
+            console.warn('[LipSync] Audio play failed:', err);
+        });
     }
 
     function stop() {
@@ -58,6 +71,7 @@ export async function createLipsyncPlayback({ audioUrl, timelineUrl, getModel })
         audio.currentTime = 0;
         playing = false;
         engine?.reset();
+        onStop?.();
     }
 
     function update() {

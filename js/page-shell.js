@@ -1,4 +1,4 @@
-﻿import { APP_CONFIG } from './config/shared-config.js';
+import { APP_CONFIG } from './config/shared-config.js';
 import {
     getFallbackCameraScene,
     loadCameraSceneConfig,
@@ -78,13 +78,93 @@ async function boot() {
         cardLayer = initCardLayer(APP_CONFIG.cards);
         const modelConfig = await buildModelConfig(APP_CONFIG.model);
         const experienceConfig = APP_CONFIG.experience;
+        const micButton = document.getElementById('talking-mic-btn');
         const defaultSceneName = modelConfig.camera.initialSceneName;
         let currentExperienceState = 'default';
         let lipsyncPlayback = null;
+        let suppressIdleAnimation = false;
+        let micRevealTimerId = 0;
+
+        const setMicTransitionDuration = (durationMs) => {
+            if (!micButton) return;
+
+            const resolvedDurationMs = Math.max(0, Number(durationMs) || 0);
+            const resolvedOpacityMs = resolvedDurationMs === 0
+                ? 0
+                : Math.max(180, Math.round(resolvedDurationMs * 0.72));
+
+            micButton.style.setProperty('--talking-mic-transition-ms', `${resolvedDurationMs}ms`);
+            micButton.style.setProperty('--talking-mic-opacity-ms', `${resolvedOpacityMs}ms`);
+        };
+
+        const setMicPlaybackState = (isPlaying) => {
+            if (!micButton) return;
+
+            micButton.classList.toggle('is-speaking', isPlaying);
+            micButton.setAttribute('aria-pressed', String(isPlaying));
+        };
+
+        const setMicButtonVisibility = (
+            isVisible,
+            durationMs = experienceConfig.cardTransitionDurationMs
+        ) => {
+            if (!micButton) return;
+
+            setMicTransitionDuration(durationMs);
+            micButton.classList.toggle('is-visible', isVisible);
+            micButton.disabled = !isVisible;
+            micButton.tabIndex = isVisible ? 0 : -1;
+            micButton.setAttribute('aria-hidden', String(!isVisible));
+
+            if (!isVisible) {
+                setMicPlaybackState(false);
+            }
+        };
+
+        const clearMicRevealTimer = () => {
+            if (micRevealTimerId === 0) return;
+
+            window.clearTimeout(micRevealTimerId);
+            micRevealTimerId = 0;
+        };
+
+        const scheduleMicButtonVisibility = (
+            isVisible,
+            {
+                durationMs = experienceConfig.cardTransitionDurationMs,
+                delayMs = 0,
+            } = {}
+        ) => {
+            clearMicRevealTimer();
+
+            if (!isVisible) {
+                setMicButtonVisibility(false, durationMs);
+                return;
+            }
+
+            setMicButtonVisibility(false, 0);
+
+            if (delayMs <= 0) {
+                setMicButtonVisibility(true, durationMs);
+                return;
+            }
+
+            micRevealTimerId = window.setTimeout(() => {
+                micRevealTimerId = 0;
+
+                if (currentExperienceState !== 'taking') return;
+                setMicButtonVisibility(true, durationMs);
+            }, delayMs);
+        };
+
+        setMicButtonVisibility(false, 0);
 
         const transitionToState = (nextState) => {
-            if (currentExperienceState === 'taking' && nextState !== 'taking') {
+            const isExitingTaking = currentExperienceState === 'taking' && nextState !== 'taking';
+            if (isExitingTaking) {
+                suppressIdleAnimation = true;
                 lipsyncPlayback?.stop();
+                suppressIdleAnimation = false;
             }
 
             const targetSceneName = nextState === 'taking'
@@ -102,6 +182,21 @@ async function boot() {
                 durationMs: experienceConfig.cardTransitionDurationMs,
             });
             currentExperienceState = nextState;
+            scheduleMicButtonVisibility(nextState === 'taking', {
+                delayMs: nextState === 'taking' ? 500 : 0,
+            });
+
+            if (nextState === 'taking') {
+                modelLayer?.playCharacterAnimation?.('intoTalking', { nextState: 'idle' });
+                return true;
+            }
+
+            if (isExitingTaking) {
+                modelLayer?.playCharacterAnimation?.('intoTalking', { nextState: 'idle' });
+                return true;
+            }
+
+            modelLayer?.playCharacterAnimation?.('idle');
             return true;
         };
 
@@ -120,6 +215,20 @@ async function boot() {
             audioUrl: APP_CONFIG.lipsync.audioUrl,
             timelineUrl: APP_CONFIG.lipsync.timelineUrl,
             getModel: () => modelLayer?.getModel(),
+            onStart() {
+                setMicPlaybackState(true);
+                modelLayer?.playCharacterAnimation?.('talking');
+            },
+            onStop() {
+                setMicPlaybackState(false);
+                if (suppressIdleAnimation) return;
+                modelLayer?.playCharacterAnimation?.('idle');
+            },
+            onEnded() {
+                setMicPlaybackState(false);
+                if (suppressIdleAnimation) return;
+                modelLayer?.playCharacterAnimation?.('idle');
+            },
         }).then((playback) => {
             lipsyncPlayback = playback;
             modelLayer?.setLipsyncUpdate?.(() => playback.update());
@@ -127,8 +236,23 @@ async function boot() {
             console.warn('[LipSync] Failed to initialize:', err);
         });
 
+        const handleMicButtonClick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (currentExperienceState !== 'taking') return;
+            lipsyncPlayback?.toggle();
+        };
+
         const handleKeydown = (event) => {
-            if (currentExperienceState === 'taking' && event.code === APP_CONFIG.lipsync.triggerKey) {
+            const isMicButtonTarget = event.target instanceof HTMLElement
+                && Boolean(event.target.closest('#talking-mic-btn'));
+
+            if (
+                currentExperienceState === 'taking'
+                && event.code === APP_CONFIG.lipsync.triggerKey
+                && !isMicButtonTarget
+            ) {
                 event.preventDefault();
                 lipsyncPlayback?.toggle();
                 return;
@@ -141,8 +265,10 @@ async function boot() {
             transitionToState('default');
         };
 
+        micButton?.addEventListener('click', handleMicButtonClick);
         window.addEventListener('keydown', handleKeydown);
         removeExperienceListeners = () => {
+            micButton?.removeEventListener('click', handleMicButtonClick);
             window.removeEventListener('keydown', handleKeydown);
         };
 
@@ -153,8 +279,10 @@ async function boot() {
 
             removeExperienceListeners();
             unlockWindowSize();
+            clearMicRevealTimer();
             lipsyncPlayback?.destroy();
             lipsyncPlayback = null;
+            setMicButtonVisibility(false, 0);
             modelLayer?.destroy?.();
             cardLayer?.destroy?.();
         };
@@ -197,4 +325,3 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('beforeunload', () => {
     destroyActiveApp();
 });
-

@@ -72,7 +72,23 @@ export const APP_CONFIG = Object.freeze({
     model: Object.freeze({
         containerId: 'glb-viewer',
         modelUrl: 'assets/GLB/TakiGLB.glb',
-        animationUrl: 'assets/GLB/TakiGLB_Animation.glb',
+        animations: Object.freeze({
+            defaultState: 'idle',
+            states: Object.freeze({
+                idle: Object.freeze({
+                    url: 'assets/GLB/Taki-Idle.glb',
+                    loop: 'repeat',
+                }),
+                intoTalking: Object.freeze({
+                    url: 'assets/GLB/Taki-IntoTalking.glb',
+                    loop: 'once',
+                }),
+                talking: Object.freeze({
+                    url: 'assets/GLB/Taki-Talking.glb',
+                    loop: 'repeat',
+                }),
+            }),
+        }),
         camera: Object.freeze({
             fov: 35,
             near: 0.1,
@@ -92,9 +108,10 @@ export const APP_CONFIG = Object.freeze({
         }),
         lights: Object.freeze({
             ambientColor: [1, 1, 1],
-            ambientIntensity: 1.5,
+            ambientIntensity: 0.5,
             keyColor: 0xffffff,
-            keyIntensity: 2.5,
+            keyIntensity: 1.0,
+            keyPosition: Object.freeze([-2.5, 3, 3]),
             keyPitchDeg: 45,
             keyYawDeg: 45,
             keyDistance: 4,
@@ -106,9 +123,18 @@ export const APP_CONFIG = Object.freeze({
             maxMetalness: 0.2,
             minRoughness: 0.65,
         }),
+        celShading: Object.freeze({
+            enabled: true,
+            threshold: 0.1,
+            softness: 0.01,
+            shadowColor: Object.freeze([0.72, 0.76, 0.84]),
+            shadowColorStrength: 1.0,
+            specularStrength: 0.0,
+        }),
         debug: Object.freeze({
             enabled: true,
             toggleKey: 'Numpad0',
+            lightingToggleKey: 'Numpad1',
         }),
     }),
     windowLock: Object.freeze({
@@ -127,3 +153,4 @@ export const APP_CONFIG = Object.freeze({
         exitKeys: Object.freeze(['Escape']),
     }),
 });
+
